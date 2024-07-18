@@ -113,7 +113,6 @@ jobs:
       uses: Azure/login@v2.1.0
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-        subscription-id: 909ae860-d680-45bb-98a5-a8a838035afd
 
     - name: Desplegar en Kubernetes
       run: kubectl apply -f ${{ github.workspace }}\${{ env.solution }}\deploy.yml
