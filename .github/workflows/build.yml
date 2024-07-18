@@ -86,7 +86,7 @@ jobs:
       if: ${{ github.ref_name == 'main' }}
       uses: prabhakarareddygaddam-mcd/replace-action@1.0.0
       with:
-        files: ${{ env.solution }}\deploy.yml
+        files: ${{ env.solution }}/deploy.yml
         replacements: |
           --version--=${{ env.version }},
           --Issuer--=${{ secrets.ISSUER }},
