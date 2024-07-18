@@ -52,11 +52,11 @@ jobs:
     - name: Adicionar repositorio
       run: dotnet nuget add source --username ${{ env.username }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/implantdent/index.json"
 
-    - name: Compilar la solución
+    - name: Compilar la solución (dev - qa)
       if: ${{ github.ref_name == 'dev' || github.ref_name == 'qa' }}
       run: dotnet build ${{ env.solution }}.sln -c Debug
 
-    - name: Compilar la solución
+    - name: Compilar la solución (main)
       if: ${{ github.ref_name == 'main' }}
       run: dotnet build ${{ env.solution }}.sln -c Release
 
@@ -71,28 +71,19 @@ jobs:
     - name: Conectar al repositorio de imágenes
       run: docker login ghcr.io -u ${{ env.username }} -p ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Construir imagen Docker
+    - name: Construir imagen Docker (main)
       if: ${{ github.ref_name == 'dev' || github.ref_name == 'qa' }}
       run: docker build ${{ env.solution }} -t ghcr.io/implantdent/api:${{ env.version }}-${{ env.versionSuffix }} -t ghcr.io/implantdent/api:${{ github.ref_name }}-${{ env.versionSuffix }} --build-arg CONFIG=Debug
 
-    - name: Construir imagen Docker
+    - name: Construir imagen Docker (main)
       if: ${{ github.ref_name == 'main' }}
       run: docker build ${{ env.solution }} -t ghcr.io/implantdent/api:${{ env.version }} -t ghcr.io/implantdent/api:latest --build-arg CONFIG=Release
 
-    - name: Publicar imagen Docker
+    - name: Publicar imagen Docker (main)
       run: docker push -a ghcr.io/implantdent/api
 
-  deploy:
-    if: ${{ github.ref_name == 'main' }}
-    needs: build
-    runs-on: 'ubuntu-latest'
-    env:
-      solution: Api
-      version: 1.0.${{ github.run_number }}
-      username: leandrobaena@gmail.com
-
-    steps:
-    - name: Reemplazar variables dev
+    - name: Reemplazar variables (main)
+      if: ${{ github.ref_name == 'main' }}
       uses: prabhakarareddygaddam-mcd/replace-action@1.0.0
       with:
         files: ${{ env.solution }}\deploy.yml
@@ -109,8 +100,30 @@ jobs:
           --AesKey--=${{ secrets.AES_KEY }},
           --AesIv--=${{ secrets.AES_IV }}
 
+    - name: Publicar archivo despliegue (main)
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        path: ${{ env.solution }}/deploy.yml
+
+  deploy:
+    if: ${{ github.ref_name == 'main' }}
+    needs: build
+    runs-on: 'ubuntu-latest'
+    env:
+      solution: Api
+      version: 1.0.${{ github.run_number }}
+      username: leandrobaena@gmail.com
+
+    steps:
+    - name: Descargar archivo despliegue
+      uses: actions/download-artifact@v4.1.8
+      with:
+        pattern: deploy.yml
+
     - name: Inicio de sesión en Azure
       uses: Azure/login@v2.1.0
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Desplegar en Kubernetes
       run: kubectl apply -f ${{ github.workspace }}\${{ env.solution }}\deploy.yml
