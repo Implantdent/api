@@ -13,14 +13,28 @@ metadata:
   labels:
     app: api
 data:
-  Jwt__Issuer: Implantdent
-  Jwt__Audience: Implantdent
-  LogInfo: 'true'
+  LogInfo: --LogInfo--
   ASPNETCORE_URLS: https://+;http://+
   ASPNETCORE_HTTPS_PORT: '443'
   ASPNETCORE_Kestrel__Certificates__Default__Path: /https/cert.pfx
   Notification__To: leandrobaena@gmail.com
-  UrlWeb: https://implantdent.com/changePassword
+  UrlWeb: --urlChangePass--
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secrets
+  namespace: implantdent
+stringData:
+  Jwt__Issuer: --Issuer--
+  Jwt__Audience: --Audience--
+  Jwt__Key: --JwtKey--
+  ConnectionStrings__Implantdent: --connString--
+  ASPNETCORE_Kestrel__Certificates__Default__Password: --passCrt--
+  Aes__Key: --AesKey--
+  Aes__IV: --AesIv---
 
 ---
 

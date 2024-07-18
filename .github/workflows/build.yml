@@ -1,4 +1,4 @@
-name: Compilar Api
+﻿name: Compilar Api
 on:
   push:
     branches:
@@ -22,7 +22,7 @@ jobs:
         java-version: 17
         distribution: oracle
     
-    - name: Descarga del c�digo
+    - name: Descarga del código
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
@@ -52,7 +52,7 @@ jobs:
     - name: Adicionar repositorio
       run: dotnet nuget add source --username ${{ env.username }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/implantdent/index.json"
 
-    - name: Compilar la soluci�n
+    - name: Compilar la solución
       run: dotnet build ${{ env.solution }}.sln -c Debug
 
     - name: Ejecutar pruebas unitarias
@@ -63,7 +63,7 @@ jobs:
     - name: Finalizar SonarQube
       run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-    - name: Conectar al repositorio de im�genes
+    - name: Conectar al repositorio de imágenes
       run: docker login ghcr.io -u ${{ env.username }} -p ${{ secrets.GITHUB_TOKEN }}
 
     - name: Construir imagen Docker
@@ -91,7 +91,21 @@ jobs:
       uses: prabhakarareddygaddam-mcd/replace-action@1.0.0
       with:
         files: ${{ env.solution }}\deploy.yml
-        replacements: --version--=${{ env.version }}
+        replacements: |
+          --version--=${{ env.version }},
+          --Issuer--=${{ secrets.ISSUER }},
+          --JwtKey--=${{ secrets.JWT_KEY }},
+          --Audience--=${{ secrets.AUDIENCE }},
+          --LogInfo--=${{ vars.LOG_INFO }},
+          --urlChangePass--=${{ vars.URL_CHANGE_PASS }},
+          --connString--=${{ secrets.CONN_STR }},
+          --passCrt--=${{ secrets.PASS_CRT }},
+          --passCrt--=${{ secrets.PASS_CRT }},
+          --AesKey--=${{ secrets.AES_KEY }},
+          --AesIv--=${{ secrets.AES_IV }}
+
+    - name: Inicio de sesión en Azure
+      uses: Azure/login@v2.1.0
 
     - name: Desplegar en Kubernetes
       run: kubectl apply -f ${{ github.workspace }}\${{ env.solution }}\deploy.yml
