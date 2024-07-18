@@ -11,6 +11,7 @@ jobs:
     env:
       solution: Api
       version: 1.0.${{ github.run_number }}
+      versionSuffix: ${{ github.ref_name }}
       username: leandrobaena@gmail.com
 
     steps:
@@ -75,3 +76,22 @@ jobs:
 
     - name: Publicar imagen Docker
       run: docker push -a ghcr.io/implantdent/api
+
+  deploy:
+    if: ${{ github.ref_name == 'main' }}
+    needs: build
+    runs-on: 'ubuntu-latest'
+    env:
+      solution: Api
+      version: 1.0.${{ github.run_number }}
+      username: leandrobaena@gmail.com
+
+    steps:
+    - name: Reemplazar variables dev
+      uses: prabhakarareddygaddam-mcd/replace-action@1.0.0
+      with:
+        files: ${{ env.solution }}\deploy.yml
+        replacements: --version--=${{ env.version }}
+
+    - name: Desplegar en Kubernetes
+      run: kubectl apply -f ${{ github.workspace }}\${{ env.solution }}\deploy.yml
